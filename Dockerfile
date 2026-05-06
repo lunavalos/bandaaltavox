@@ -47,6 +47,7 @@ FROM php:8.4-fpm-alpine AS runtime
 LABEL maintainer="Banda Alta Vox"
 
 # System deps + PHP extensions
+# pdo_sqlite/sqlite3 are bundled in php:8.4-fpm-alpine — no compile needed
 RUN apk add --no-cache \
     nginx \
     supervisor \
@@ -57,17 +58,14 @@ RUN apk add --no-cache \
     libzip-dev \
     oniguruma-dev \
     icu-dev \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install pdo_mysql \
     && docker-php-ext-install mbstring \
-    && docker-php-ext-install gd \
     && docker-php-ext-install zip \
     && docker-php-ext-install bcmath \
     && docker-php-ext-install intl \
     && docker-php-ext-install opcache \
     && docker-php-ext-install pcntl \
-    && pecl install redis \
-    && docker-php-ext-enable redis
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install gd
 
 # PHP config
 COPY docker/php/php.ini /usr/local/etc/php/conf.d/app.ini
