@@ -46,26 +46,29 @@ FROM php:8.4-fpm-alpine AS runtime
 
 LABEL maintainer="Banda Alta Vox"
 
-# System deps + PHP extensions
-# pdo_sqlite/sqlite3 are bundled in php:8.4-fpm-alpine — no compile needed
+# Use install-php-extensions for fast pre-built extension installation
+# (avoids compiling from source = ~2 min instead of 30 min)
+COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
+
+# System deps (runtime libs only, no -dev headers needed)
 RUN apk add --no-cache \
     nginx \
     supervisor \
     curl \
-    libpng-dev \
-    libjpeg-turbo-dev \
-    freetype-dev \
-    libzip-dev \
-    oniguruma-dev \
-    icu-dev \
-    && docker-php-ext-install mbstring \
-    && docker-php-ext-install zip \
-    && docker-php-ext-install bcmath \
-    && docker-php-ext-install intl \
-    && docker-php-ext-install opcache \
-    && docker-php-ext-install pcntl \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install gd
+    libpng \
+    libjpeg-turbo \
+    freetype \
+    libzip \
+    oniguruma \
+    icu-libs \
+    && install-php-extensions \
+        mbstring \
+        zip \
+        bcmath \
+        intl \
+        opcache \
+        pcntl \
+        gd
 
 # PHP config
 COPY docker/php/php.ini /usr/local/etc/php/conf.d/app.ini
