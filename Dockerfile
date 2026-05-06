@@ -1,22 +1,5 @@
 # ============================================================
-# Stage 1 – Node: compile frontend assets (client + SSR)
-# ============================================================
-FROM node:22-alpine AS frontend
-
-WORKDIR /app
-
-COPY package.json package-lock.json ./
-RUN npm ci --prefer-offline
-
-COPY resources/ resources/
-COPY public/ public/
-COPY vite.config.js jsconfig.json tailwind.config.js postcss.config.js ./
-
-RUN npm run build
-
-
-# ============================================================
-# Stage 2 – Composer: install PHP deps (no dev)
+# Stage 1 – Composer: install PHP deps (no dev)
 # ============================================================
 FROM composer:2.8 AS vendor
 
@@ -33,6 +16,27 @@ RUN composer install \
 
 COPY . .
 RUN composer dump-autoload --optimize --no-dev
+
+
+# ============================================================
+# Stage 2 – Node: compile frontend assets (client + SSR)
+# vendor/ is needed because app.js imports from vendor/tightenco/ziggy
+# ============================================================
+FROM node:22-alpine AS frontend
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci --prefer-offline
+
+COPY resources/ resources/
+COPY public/ public/
+COPY vite.config.js jsconfig.json tailwind.config.js postcss.config.js ./
+
+# Copy only the Ziggy package from the vendor stage so Vite can resolve it
+COPY --from=vendor /app/vendor/tightenco /app/vendor/tightenco
+
+RUN npm run build
 
 
 # ============================================================
