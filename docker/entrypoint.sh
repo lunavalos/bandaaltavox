@@ -9,6 +9,10 @@ php artisan route:cache
 php artisan view:cache
 php artisan event:cache
 
+echo "→ Ensuring SQLite database exists..."
+touch /var/www/html/database/database.sqlite
+chown www-data:www-data /var/www/html/database/database.sqlite 2>/dev/null || true
+
 echo "→ Running migrations..."
 php artisan migrate --force
 
