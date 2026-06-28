@@ -3,6 +3,19 @@ set -e
 
 cd /var/www/html
 
+# Ensure storage + cache are writable by php-fpm (www-data). Coolify mounts a
+# persistent volume over storage/ at runtime owned by root, which shadows the
+# image's build-time chown — so we must fix ownership here, after the mount.
+echo "→ Fixing storage permissions..."
+mkdir -p storage/app/public \
+         storage/framework/cache \
+         storage/framework/sessions \
+         storage/framework/views \
+         storage/logs \
+         bootstrap/cache
+chown -R www-data:www-data storage bootstrap/cache
+chmod -R 775 storage bootstrap/cache
+
 # Ensure SQLite DB file exists only when actually using SQLite.
 # NOTE: We store the DB in storage/sqlite/ (not database/) to avoid the
 # Coolify volume mount shadowing the database/migrations/ directory.
