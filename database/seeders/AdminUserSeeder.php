@@ -10,6 +10,12 @@ class AdminUserSeeder extends Seeder
 {
     public function run(): void
     {
+        // Never create the default/weak-password admin in production.
+        // For production use: php artisan app:create-admin
+        if (app()->environment('production')) {
+            return;
+        }
+
         $admin = User::firstOrCreate(
             ['email' => 'admin@bandaaltavox.com'],
             [
