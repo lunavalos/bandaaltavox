@@ -9,6 +9,25 @@ const props = defineProps({
 
 const scrolled = ref(false);
 const mobileMenuOpen = ref(false);
+const emailCopied = ref(false);
+
+async function copyEmail() {
+    const email = props.settings.business_email;
+    if (!email) return;
+    try {
+        await navigator.clipboard.writeText(email);
+    } catch {
+        // Fallback for browsers without async clipboard access
+        const el = document.createElement('textarea');
+        el.value = email;
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand('copy');
+        document.body.removeChild(el);
+    }
+    emailCopied.value = true;
+    setTimeout(() => (emailCopied.value = false), 2000);
+}
 
 const whatsappLink = computed(() => {
     const num = props.settings.whatsapp_number?.replace(/\D/g, '');
@@ -347,9 +366,10 @@ function formatPrice(val) {
                     </a>
 
                     <!-- Email -->
-                    <a
+                    <button
                         v-if="settings.business_email"
-                        :href="`mailto:${settings.business_email}`"
+                        type="button"
+                        @click="copyEmail"
                         class="group flex flex-col items-center text-center bg-slate-900/50 border border-slate-800/50 rounded-2xl p-8 hover:border-blue-500/30 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/5"
                     >
                         <div class="flex h-14 w-14 items-center justify-center rounded-full bg-blue-500/10 text-blue-400 mb-4 group-hover:bg-blue-500/20 transition-colors">
@@ -357,8 +377,10 @@ function formatPrice(val) {
                         </div>
                         <h3 class="text-lg font-bold text-white mb-1">Email</h3>
                         <p class="text-slate-400 text-sm">{{ settings.business_email }}</p>
-                        <span class="mt-3 text-blue-400 text-sm font-medium">Enviar correo →</span>
-                    </a>
+                        <span class="mt-3 text-sm font-medium" :class="emailCopied ? 'text-green-400' : 'text-blue-400'">
+                            {{ emailCopied ? '¡Correo copiado!' : 'Copiar correo →' }}
+                        </span>
+                    </button>
                 </div>
 
                 <!-- Social media strip -->
