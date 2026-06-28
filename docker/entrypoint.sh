@@ -3,13 +3,15 @@ set -e
 
 cd /var/www/html
 
-# Ensure SQLite DB file exists at the persistent storage path
+# Ensure SQLite DB file exists only when actually using SQLite.
 # NOTE: We store the DB in storage/sqlite/ (not database/) to avoid the
 # Coolify volume mount shadowing the database/migrations/ directory.
-echo "→ Ensuring SQLite database exists..."
-mkdir -p /var/www/html/storage/sqlite
-touch /var/www/html/storage/sqlite/database.sqlite
-chown www-data:www-data /var/www/html/storage/sqlite/database.sqlite 2>/dev/null || true
+if [ "${DB_CONNECTION:-sqlite}" = "sqlite" ]; then
+    echo "→ Ensuring SQLite database exists..."
+    mkdir -p /var/www/html/storage/sqlite
+    touch /var/www/html/storage/sqlite/database.sqlite
+    chown www-data:www-data /var/www/html/storage/sqlite/database.sqlite 2>/dev/null || true
+fi
 
 # Cache config/routes/views — failures are non-fatal (missing optional vars, etc.)
 echo "→ Caching Laravel config..."

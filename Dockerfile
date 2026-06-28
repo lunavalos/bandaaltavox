@@ -68,7 +68,8 @@ RUN apk add --no-cache \
         intl \
         opcache \
         pcntl \
-        gd
+        gd \
+        pdo_mysql
 
 # PHP config
 COPY docker/php/php.ini /usr/local/etc/php/conf.d/app.ini
