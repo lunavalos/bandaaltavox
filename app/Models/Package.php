@@ -10,13 +10,14 @@ use Illuminate\Support\Str;
 class Package extends Model
 {
     protected $fillable = [
-        'name', 'slug', 'description', 'price', 'duration_hours',
+        'name', 'slug', 'description', 'price', 'hide_price', 'duration_hours',
         'required_addon_subcategory',
         'image', 'is_active', 'is_featured', 'sort_order',
     ];
 
     protected $casts = [
         'price' => 'decimal:2',
+        'hide_price' => 'boolean',
         'is_active' => 'boolean',
         'is_featured' => 'boolean',
     ];

@@ -14,6 +14,7 @@ const form = useForm({
     name: '',
     description: '',
     price: '',
+    hide_price: false,
     duration_hours: 5,
     required_addon_subcategory: '',
     is_active: true,
@@ -73,14 +74,18 @@ const submit = () => {
                             <InputLabel for="price" value="Precio (MXN)" />
                             <div class="relative mt-1">
                                 <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 text-sm">$</span>
-                                <TextInput id="price" v-model="form.price" type="number" step="100" min="0" class="block w-full pl-7" required placeholder="43000" />
+                                <TextInput id="price" v-model="form.price" type="number" step="100" min="0" class="block w-full pl-7" placeholder="Dejar vacío si requiere cotización" />
                             </div>
+                            <label class="mt-1.5 flex items-center gap-2 cursor-pointer select-none">
+                                <input type="checkbox" v-model="form.hide_price" class="h-4 w-4 rounded border-gray-300 text-amber-500 focus:ring-amber-400" />
+                                <span class="text-xs text-gray-500">Ocultar precio al público (mostrar "Requiere Cotización")</span>
+                            </label>
                             <InputError class="mt-1" :message="form.errors.price" />
                         </div>
 
                         <div>
                             <InputLabel for="duration" value="Duración (horas)" />
-                            <TextInput id="duration" v-model="form.duration_hours" type="number" min="1" class="mt-1 block w-full" required />
+                            <TextInput id="duration" v-model="form.duration_hours" type="number" min="1" class="mt-1 block w-full" placeholder="Dejar vacío si aplica" />
                             <InputError class="mt-1" :message="form.errors.duration_hours" />
                         </div>
 
