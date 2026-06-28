@@ -114,7 +114,7 @@ defineProps({
         >
             <!-- Logo -->
             <div class="flex h-16 items-center gap-3 px-6 border-b border-slate-800">
-                <img src="/storage/images/logo-blanco-altavox.png" alt="Banda Alta Vox" class="h-9" />
+                <img src="/images/logo-blanco-altavox.png" alt="Banda Alta Vox" class="h-9" />
                 <div>
                     <p class="text-slate-400 text-xs">Panel de administración</p>
                 </div>

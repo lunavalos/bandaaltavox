@@ -78,7 +78,7 @@ const remaining = computed(() => {
             <div class="rounded-xl border border-gray-200 bg-white shadow-sm print:border-none print:shadow-none print:rounded-none">
                 <!-- Header -->
                 <div class="border-b border-gray-200 p-8 text-center print:border-b-2 print:border-black">
-                    <img src="/storage/images/logo-azul-altavox.png" alt="Banda Alta Vox" class="h-16 mx-auto mb-2" />
+                    <img src="/images/logo-azul-altavox.png" alt="Banda Alta Vox" class="h-16 mx-auto mb-2" />
                     <p class="mt-1 text-sm text-gray-500">Contrato de Prestación de Servicios</p>
                     <p class="mt-2 text-xs text-gray-400 font-mono">{{ c.contract_number }}</p>
                 </div>

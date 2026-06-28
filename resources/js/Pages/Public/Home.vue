@@ -57,7 +57,7 @@ function formatPrice(val) {
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
                 <!-- Logo -->
                 <button @click="scrollTo('hero')" class="flex items-center gap-3 group">
-                    <img src="/storage/images/logo-blanco-altavox.png" alt="Banda Alta Vox" class="h-8 sm:h-10" />
+                    <img src="/images/logo-blanco-altavox.png" alt="Banda Alta Vox" class="h-8 sm:h-10" />
                 </button>
 
                 <!-- Desktop links -->
@@ -143,7 +143,7 @@ function formatPrice(val) {
                 </div>
 
                 <!-- Main heading: real logo -->
-                <img src="/storage/images/logo-blanco-altavox.png" alt="Banda Alta Vox" class="h-32 sm:h-44 mx-auto mb-8 drop-shadow-2xl" />
+                <img src="/images/logo-blanco-altavox.png" alt="Banda Alta Vox" class="h-32 sm:h-44 mx-auto mb-8 drop-shadow-2xl" />
 
                 <!-- Decorative line -->
                 <div class="flex items-center justify-center gap-3 mb-8">
@@ -387,7 +387,7 @@ function formatPrice(val) {
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
                 <div class="flex flex-col md:flex-row items-center justify-between gap-6">
                     <div class="flex items-center gap-3">
-                        <img src="/storage/images/logo-blanco-altavox.png" alt="Banda Alta Vox" class="h-7" />
+                        <img src="/images/logo-blanco-altavox.png" alt="Banda Alta Vox" class="h-7" />
                     </div>
                     <div class="flex items-center gap-6 text-sm text-slate-500">
                         <button @click="scrollTo('hero')" class="hover:text-slate-300 transition-colors">Inicio</button>

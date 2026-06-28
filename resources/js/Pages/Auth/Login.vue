@@ -35,7 +35,7 @@ const submit = () => {
         <!-- Logo -->
         <div class="mb-8 text-center">
             <Link :href="route('home')" class="inline-block">
-                <img src="/storage/images/logo-blanco-altavox.png" alt="Banda Alta Vox" class="h-16 mx-auto" />
+                <img src="/images/logo-blanco-altavox.png" alt="Banda Alta Vox" class="h-16 mx-auto" />
             </Link>
         </div>
 

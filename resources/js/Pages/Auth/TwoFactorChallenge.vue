@@ -36,7 +36,7 @@ const logout = () => {
 
     <div class="min-h-screen flex flex-col items-center justify-center bg-slate-900 px-4">
         <div class="mb-8 text-center">
-            <img src="/storage/images/logo-blanco-altavox.png" alt="Banda Alta Vox" class="h-16 mx-auto" />
+            <img src="/images/logo-blanco-altavox.png" alt="Banda Alta Vox" class="h-16 mx-auto" />
         </div>
 
         <div class="w-full max-w-sm rounded-2xl bg-white p-8 shadow-2xl">
