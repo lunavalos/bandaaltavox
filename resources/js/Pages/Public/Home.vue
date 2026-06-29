@@ -672,6 +672,18 @@ function formatPrice(val) {
                         © {{ new Date().getFullYear() }} {{ settings.business_name }}
                     </p>
                 </div>
+                <div class="mt-8 pt-6 border-t border-slate-800/40 flex justify-center">
+                    <a
+                        href="https://lunavalos.com/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="flex items-center gap-2.5 text-slate-600 hover:text-slate-400 transition-colors duration-300 group"
+                        title="Sitio web desarrollado por Lunavalos Digital House"
+                    >
+                        <span class="text-xs">Desarrollado por</span>
+                        <img src="/images/lunavalos-logo.png" alt="Lunavalos Digital House" class="h-5 opacity-50 group-hover:opacity-80 transition-opacity duration-300" />
+                    </a>
+                </div>
             </div>
         </footer>
 
