@@ -37,6 +37,10 @@ php artisan event:cache   || echo "⚠ event:cache failed, continuing..."
 echo "→ Running migrations..."
 php artisan migrate --force
 
+# Assign 2FA type to any existing users that don't have one yet
+echo "→ Assigning 2FA types to existing users..."
+php artisan users:assign-2fa || echo "⚠ assign-2fa failed, continuing..."
+
 echo "→ Linking storage..."
 php artisan storage:link --force 2>/dev/null || true
 
