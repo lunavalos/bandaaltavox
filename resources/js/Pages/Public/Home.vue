@@ -100,25 +100,19 @@ const filteredGallery = computed(() => {
     }
 });
 
-// Container class per tab
+// CSS Grid for all tabs — no CSS columns (broken in Safari with aspect-ratio + iframes)
 const gridContainerClass = computed(() => {
     switch (activeTab.value) {
-        case 'reel':  return 'grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3';
-        case 'video': return 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5';
-        default:      return 'columns-2 sm:columns-3 lg:columns-4 gap-3 sm:gap-4';
+        case 'reel':  return 'grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 auto-rows-[200px] sm:auto-rows-[240px] gap-2 sm:gap-3';
+        case 'video': return 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 auto-rows-[220px] sm:auto-rows-[260px] gap-4 sm:gap-5';
+        default:      return 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 auto-rows-[160px] sm:auto-rows-[190px] gap-3 sm:gap-4';
     }
 });
 
-// True when the container is CSS columns (masonry) — items need break-inside-avoid + mb
-const isMasonry = computed(() => activeTab.value === 'all' || activeTab.value === 'photo');
-
-// Per-item aspect class
-function itemAspect(item) {
-    if (activeTab.value === 'reel')  return 'aspect-[9/16]';
-    if (activeTab.value === 'video') return 'aspect-video';
-    // 'all' / 'photo': respect item's own format
-    const map = { landscape: 'aspect-video', portrait: 'aspect-[9/16]', square: 'aspect-square' };
-    return map[item.format] || 'aspect-video';
+// Portrait items span 2 rows to create masonry effect without CSS columns
+function itemRowSpan(item) {
+    if (activeTab.value === 'reel' || activeTab.value === 'video') return '';
+    return item.format === 'portrait' ? 'row-span-2' : '';
 }
 
 async function copyEmail() {
@@ -381,14 +375,13 @@ function formatPrice(val) {
                     </button>
                 </div>
 
-                <!-- Grid — layout changes per tab -->
+                <!-- Grid — CSS Grid for all tabs (Safari-safe, no CSS columns) -->
                 <div :class="gridContainerClass">
                     <div
                         v-for="item in filteredGallery"
                         :key="item.id"
                         :class="[
-                            itemAspect(item),
-                            isMasonry ? 'break-inside-avoid mb-3 sm:mb-4' : '',
+                            itemRowSpan(item),
                             'group relative rounded-xl overflow-hidden bg-slate-900 border border-slate-800/50',
                             'hover:border-blue-500/40 transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/10',
                         ]"
