@@ -75,15 +75,51 @@ function onGalleryClick(item) {
         window.open(item.url, '_blank', 'noopener,noreferrer');
         return;
     }
-    // Both YouTube and Facebook videos open in the lightbox
     openLightbox(item);
 }
 
-const aspectClass = {
-    landscape: 'aspect-video',
-    portrait: 'aspect-[9/16]',
-    square: 'aspect-square',
-};
+// Gallery tabs
+const activeTab = ref('all');
+
+const galleryTabs = computed(() => {
+    const g = props.gallery || [];
+    const tabs = [{ key: 'all', label: 'Todos' }];
+    if (g.some(i => i.type === 'video' && i.format !== 'portrait')) tabs.push({ key: 'video', label: 'Videos' });
+    if (g.some(i => i.format === 'portrait'))                        tabs.push({ key: 'reel',  label: 'Reels'  });
+    if (g.some(i => i.type === 'photo'))                             tabs.push({ key: 'photo', label: 'Fotos'  });
+    return tabs;
+});
+
+const filteredGallery = computed(() => {
+    const g = props.gallery || [];
+    switch (activeTab.value) {
+        case 'video': return g.filter(i => i.type === 'video' && i.format !== 'portrait');
+        case 'reel':  return g.filter(i => i.format === 'portrait');
+        case 'photo': return g.filter(i => i.type === 'photo');
+        default:      return g;
+    }
+});
+
+// Container class per tab
+const gridContainerClass = computed(() => {
+    switch (activeTab.value) {
+        case 'reel':  return 'grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3';
+        case 'video': return 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5';
+        default:      return 'columns-2 sm:columns-3 lg:columns-4 gap-3 sm:gap-4';
+    }
+});
+
+// True when the container is CSS columns (masonry) — items need break-inside-avoid + mb
+const isMasonry = computed(() => activeTab.value === 'all' || activeTab.value === 'photo');
+
+// Per-item aspect class
+function itemAspect(item) {
+    if (activeTab.value === 'reel')  return 'aspect-[9/16]';
+    if (activeTab.value === 'video') return 'aspect-video';
+    // 'all' / 'photo': respect item's own format
+    const map = { landscape: 'aspect-video', portrait: 'aspect-[9/16]', square: 'aspect-square' };
+    return map[item.format] || 'aspect-video';
+}
 
 async function copyEmail() {
     const email = props.settings.business_email;
@@ -318,7 +354,9 @@ function formatPrice(val) {
         <section v-if="gallery?.length" id="galeria" class="relative py-24 sm:py-32">
             <div class="absolute inset-0 bg-gradient-to-b from-slate-950 via-slate-900/40 to-slate-950"></div>
             <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="text-center mb-16">
+
+                <!-- Header -->
+                <div class="text-center mb-10">
                     <span class="inline-block text-blue-400 text-sm font-semibold tracking-widest uppercase mb-4">Galería</span>
                     <h2 class="text-3xl sm:text-5xl font-bold text-white mb-6">
                         Mira lo que <span class="text-blue-400">hacemos</span>
@@ -328,17 +366,36 @@ function formatPrice(val) {
                     </p>
                 </div>
 
-                <!-- Masonry-style grid that accommodates mixed formats -->
-                <div class="columns-2 sm:columns-3 lg:columns-4 gap-3 sm:gap-4 space-y-3 sm:space-y-4">
+                <!-- Tabs — only show tabs that have content -->
+                <div v-if="galleryTabs.length > 1" class="flex justify-center gap-2 mb-8 flex-wrap">
+                    <button
+                        v-for="tab in galleryTabs"
+                        :key="tab.key"
+                        @click="activeTab = tab.key"
+                        :class="activeTab === tab.key
+                            ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/30'
+                            : 'bg-slate-800/60 text-slate-300 hover:bg-slate-700 hover:text-white border border-slate-700/50'"
+                        class="px-5 py-2 rounded-full text-sm font-semibold transition-all duration-200"
+                    >
+                        {{ tab.label }}
+                    </button>
+                </div>
+
+                <!-- Grid — layout changes per tab -->
+                <div :class="gridContainerClass">
                     <div
-                        v-for="item in gallery"
+                        v-for="item in filteredGallery"
                         :key="item.id"
-                        class="break-inside-avoid group relative rounded-xl overflow-hidden bg-slate-900 border border-slate-800/50 hover:border-blue-500/40 transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/10"
-                        :class="aspectClass[item.format] || 'aspect-video'"
+                        :class="[
+                            itemAspect(item),
+                            isMasonry ? 'break-inside-avoid mb-3 sm:mb-4' : '',
+                            'group relative rounded-xl overflow-hidden bg-slate-900 border border-slate-800/50',
+                            'hover:border-blue-500/40 transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/10',
+                        ]"
                         @mouseenter="onGalleryMouseEnter(item)"
                         @mouseleave="hoveredId = null"
                     >
-                        <!-- ── Facebook video: embed directly (FB player shows first frame) ── -->
+                        <!-- ── Facebook video: embed directly ── -->
                         <template v-if="isDirectEmbed(item)">
                             <iframe
                                 :src="facebookVideoEmbed(item.url)"
@@ -350,19 +407,15 @@ function formatPrice(val) {
                             <div class="absolute inset-0 z-10 cursor-pointer" @click="onGalleryClick(item)" />
                         </template>
 
-                        <!-- ── YouTube: thumbnail → muted preview on hover (iframe persists after first load) ── -->
+                        <!-- ── YouTube: thumbnail → muted preview on hover ── -->
                         <template v-else-if="item.platform === 'youtube' && item.type === 'video'">
-                            <!-- Thumbnail fades out when iframe is playing -->
                             <img
                                 v-if="galleryThumb(item)"
                                 :src="galleryThumb(item)"
                                 :alt="item.title || ''"
                                 :class="['absolute inset-0 w-full h-full object-cover transition-opacity duration-500', hoveredId === item.id ? 'opacity-0' : 'opacity-100']"
                             />
-                            <!--
-                                v-if on first hover (preloadedIds), v-show after → iframe stays in DOM
-                                so the video doesn't reload on subsequent hovers
-                            -->
+                            <!-- iframe persists in DOM after first hover (v-show, not v-if) -->
                             <iframe
                                 v-if="preloadedIds.has(item.id)"
                                 v-show="hoveredId === item.id"
@@ -374,7 +427,7 @@ function formatPrice(val) {
                             <div class="absolute inset-0 z-10 cursor-pointer" @click="onGalleryClick(item)" />
                         </template>
 
-                        <!-- ── Photo or other: static image ── -->
+                        <!-- ── Photo / other: static image ── -->
                         <template v-else>
                             <img
                                 v-if="galleryThumb(item)"
@@ -390,18 +443,19 @@ function formatPrice(val) {
                             <div class="absolute inset-0 z-10 cursor-pointer" @click="onGalleryClick(item)" />
                         </template>
 
-                        <!-- Play badge — visible at rest, fades when preview starts -->
+                        <!-- Play badge (fades when preview starts) -->
                         <div
                             v-if="item.type === 'video'"
                             class="absolute inset-0 flex items-center justify-center z-20 pointer-events-none"
                         >
                             <div :class="[
-                                'h-12 w-12 rounded-full border border-white/20 flex items-center justify-center transition-all duration-300',
+                                'rounded-full border border-white/20 flex items-center justify-center transition-all duration-300',
+                                activeTab === 'reel' ? 'h-9 w-9' : 'h-12 w-12',
                                 hoveredId === item.id && !isDirectEmbed(item)
                                     ? 'opacity-0 scale-125'
-                                    : 'bg-black/50 opacity-100 scale-100'
+                                    : 'bg-black/50 opacity-100 scale-100',
                             ]">
-                                <svg class="h-5 w-5 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                                <svg :class="activeTab === 'reel' ? 'h-3.5 w-3.5' : 'h-5 w-5'" class="text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
                                     <path d="M8 5v14l11-7z"/>
                                 </svg>
                             </div>
@@ -409,18 +463,19 @@ function formatPrice(val) {
 
                         <!-- Bottom info bar -->
                         <div class="absolute bottom-0 inset-x-0 z-20 pointer-events-none">
-                            <div class="bg-gradient-to-t from-black/80 to-transparent p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-                                <p v-if="item.title" class="text-white text-xs font-medium truncate">{{ item.title }}</p>
+                            <div class="bg-gradient-to-t from-black/80 to-transparent p-2.5 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+                                <p v-if="item.title" class="text-white text-xs font-medium truncate leading-snug">{{ item.title }}</p>
                                 <div class="flex items-center gap-1.5 mt-0.5">
-                                    <span v-if="item.platform === 'youtube'" class="text-[10px] font-bold text-red-400">▶ YouTube</span>
-                                    <span v-else-if="item.platform === 'facebook'" class="text-[10px] font-bold text-blue-400">f Facebook</span>
+                                    <span v-if="item.platform === 'youtube'"   class="text-[10px] font-bold text-red-400">▶ YouTube</span>
+                                    <span v-else-if="item.platform === 'facebook'"  class="text-[10px] font-bold text-blue-400">f Facebook</span>
                                     <span v-else-if="item.platform === 'instagram'" class="text-[10px] font-bold text-pink-400">Instagram</span>
-                                    <span v-if="item.type === 'video'" class="text-[10px] text-white/50 ml-auto">Clic para reproducir →</span>
+                                    <span v-if="item.type === 'video'" class="text-[10px] text-white/40 ml-auto">▶ reproducir</span>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+
             </div>
         </section>
 
