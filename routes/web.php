@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\ContractController;
+use App\Http\Controllers\Admin\GalleryController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EventController;
 use App\Http\Controllers\Admin\PackageController;
@@ -132,6 +133,18 @@ Route::middleware(['auth', 'active', 'verified', 'two-factor'])->prefix('admin')
         Route::get('/payments/{contract}', [PaymentController::class, 'show'])->name('payments.show');
         Route::post('/payments/{contract}', [PaymentController::class, 'store'])->name('payments.store')->middleware('permission:payments.create');
         Route::delete('/payments/{payment}/delete', [PaymentController::class, 'destroy'])->name('payments.destroy')->middleware('permission:payments.delete');
+    });
+
+    // Gallery
+    Route::middleware('permission:gallery.view')->group(function () {
+        Route::get('/gallery', [GalleryController::class, 'index'])->name('gallery.index');
+        Route::get('/gallery/create', [GalleryController::class, 'create'])->name('gallery.create')->middleware('permission:gallery.manage');
+        Route::post('/gallery', [GalleryController::class, 'store'])->name('gallery.store')->middleware('permission:gallery.manage');
+        Route::get('/gallery/{gallery}/edit', [GalleryController::class, 'edit'])->name('gallery.edit')->middleware('permission:gallery.manage');
+        Route::put('/gallery/{gallery}', [GalleryController::class, 'update'])->name('gallery.update')->middleware('permission:gallery.manage');
+        Route::post('/gallery/{gallery}/thumbnail', [GalleryController::class, 'uploadThumbnail'])->name('gallery.upload-thumbnail')->middleware('permission:gallery.manage');
+        Route::delete('/gallery/{gallery}/thumbnail', [GalleryController::class, 'deleteThumbnail'])->name('gallery.delete-thumbnail')->middleware('permission:gallery.manage');
+        Route::delete('/gallery/{gallery}', [GalleryController::class, 'destroy'])->name('gallery.destroy')->middleware('permission:gallery.manage');
     });
 
     // Profile

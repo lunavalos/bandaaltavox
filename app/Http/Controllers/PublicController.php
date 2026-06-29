@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\GalleryItem;
 use App\Models\Package;
 use App\Models\Setting;
 use Inertia\Inertia;
@@ -29,9 +30,15 @@ class PublicController extends Controller
             ->orderBy('sort_order')
             ->get();
 
+        $gallery = GalleryItem::where('is_active', true)
+            ->orderBy('sort_order')
+            ->orderByDesc('created_at')
+            ->get();
+
         return Inertia::render('Public/Home', [
             'settings' => $settings,
             'packages' => $packages,
+            'gallery'  => $gallery,
         ]);
     }
 }

@@ -5,11 +5,85 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 const props = defineProps({
     settings: Object,
     packages: Array,
+    gallery: Array,
 });
 
 const scrolled = ref(false);
 const mobileMenuOpen = ref(false);
 const emailCopied = ref(false);
+
+// Gallery
+const lightbox = ref(null);
+const hoveredId = ref(null);
+// Track which items have had their preview iframe loaded at least once
+// so we use v-show instead of v-if after first hover (avoids reload delay)
+const preloadedIds = ref(new Set());
+
+function openLightbox(item) { lightbox.value = item; }
+function closeLightbox() { lightbox.value = null; }
+
+function onGalleryMouseEnter(item) {
+    hoveredId.value = item.id;
+    preloadedIds.value.add(item.id);
+}
+
+function youtubeId(url) {
+    const m = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/)|youtu\.be\/)([^&?\s]+)/);
+    return m ? m[1] : null;
+}
+
+function youtubeThumbUrl(url) {
+    const id = youtubeId(url);
+    return id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : null;
+}
+
+function youtubePreviewEmbed(url) {
+    const id = youtubeId(url);
+    if (!id) return null;
+    return `https://www.youtube.com/embed/${id}?autoplay=1&mute=1&controls=0&loop=1&playlist=${id}&modestbranding=1&playsinline=1&rel=0&enablejsapi=0`;
+}
+
+function youtubeFullEmbed(url) {
+    const id = youtubeId(url);
+    return id ? `https://www.youtube.com/embed/${id}?autoplay=1&rel=0` : null;
+}
+
+function facebookVideoEmbed(url, muted = true) {
+    const base = `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(url)}&show_text=false&width=800`;
+    return muted ? `${base}&mute=1` : base;
+}
+
+function galleryThumb(item) {
+    if (item.thumbnail) return `/storage/${item.thumbnail}`;
+    if (item.platform === 'youtube') return youtubeThumbUrl(item.url);
+    return null;
+}
+
+function lightboxEmbedUrl(item) {
+    if (item.platform === 'youtube') return youtubeFullEmbed(item.url);
+    if (item.platform === 'facebook') return facebookVideoEmbed(item.url, false);
+    return null;
+}
+
+// Facebook videos: show embed directly in card (FB player shows frame preview)
+function isDirectEmbed(item) {
+    return item.type === 'video' && item.platform === 'facebook';
+}
+
+function onGalleryClick(item) {
+    if (item.type !== 'video') {
+        window.open(item.url, '_blank', 'noopener,noreferrer');
+        return;
+    }
+    // Both YouTube and Facebook videos open in the lightbox
+    openLightbox(item);
+}
+
+const aspectClass = {
+    landscape: 'aspect-video',
+    portrait: 'aspect-[9/16]',
+    square: 'aspect-square',
+};
 
 async function copyEmail() {
     const email = props.settings.business_email;
@@ -83,6 +157,7 @@ function formatPrice(val) {
                 <div class="hidden md:flex items-center gap-8">
                     <button @click="scrollTo('hero')" class="text-sm font-medium text-slate-300 hover:text-blue-400 transition-colors">Inicio</button>
                     <button @click="scrollTo('servicios')" class="text-sm font-medium text-slate-300 hover:text-blue-400 transition-colors">Servicios</button>
+                    <button v-if="gallery?.length" @click="scrollTo('galeria')" class="text-sm font-medium text-slate-300 hover:text-blue-400 transition-colors">Galería</button>
                     <button @click="scrollTo('paquetes')" class="text-sm font-medium text-slate-300 hover:text-blue-400 transition-colors">Paquetes</button>
                     <button @click="scrollTo('contacto')" class="text-sm font-medium text-slate-300 hover:text-blue-400 transition-colors">Contacto</button>
                 </div>
@@ -131,6 +206,7 @@ function formatPrice(val) {
                 <div v-if="mobileMenuOpen" class="md:hidden bg-slate-950/95 backdrop-blur-lg border-t border-slate-800/50 px-4 py-4 space-y-3">
                     <button @click="scrollTo('hero')" class="block w-full text-left text-sm font-medium text-slate-300 hover:text-blue-400 py-2">Inicio</button>
                     <button @click="scrollTo('servicios')" class="block w-full text-left text-sm font-medium text-slate-300 hover:text-blue-400 py-2">Servicios</button>
+                    <button v-if="gallery?.length" @click="scrollTo('galeria')" class="block w-full text-left text-sm font-medium text-slate-300 hover:text-blue-400 py-2">Galería</button>
                     <button @click="scrollTo('paquetes')" class="block w-full text-left text-sm font-medium text-slate-300 hover:text-blue-400 py-2">Paquetes</button>
                     <button @click="scrollTo('contacto')" class="block w-full text-left text-sm font-medium text-slate-300 hover:text-blue-400 py-2">Contacto</button>
                     <Link :href="route('login')" class="block text-center text-sm font-medium bg-blue-500 text-slate-900 px-5 py-2.5 rounded-full hover:bg-blue-400 transition-colors mt-2">Iniciar Sesión</Link>
@@ -231,6 +307,118 @@ function formatPrice(val) {
                         <span class="text-4xl block mb-4">{{ ev.icon }}</span>
                         <h3 class="text-xl font-bold text-white mb-2 group-hover:text-blue-400 transition-colors">{{ ev.title }}</h3>
                         <p class="text-slate-400 text-sm leading-relaxed">{{ ev.desc }}</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ═══════════════════════════════════════════════════════════ -->
+        <!-- GALERÍA — Photos & videos                                   -->
+        <!-- ═══════════════════════════════════════════════════════════ -->
+        <section v-if="gallery?.length" id="galeria" class="relative py-24 sm:py-32">
+            <div class="absolute inset-0 bg-gradient-to-b from-slate-950 via-slate-900/40 to-slate-950"></div>
+            <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-16">
+                    <span class="inline-block text-blue-400 text-sm font-semibold tracking-widest uppercase mb-4">Galería</span>
+                    <h2 class="text-3xl sm:text-5xl font-bold text-white mb-6">
+                        Mira lo que <span class="text-blue-400">hacemos</span>
+                    </h2>
+                    <p class="text-slate-400 text-lg max-w-2xl mx-auto">
+                        Fotos y videos de nuestras presentaciones en vivo
+                    </p>
+                </div>
+
+                <!-- Masonry-style grid that accommodates mixed formats -->
+                <div class="columns-2 sm:columns-3 lg:columns-4 gap-3 sm:gap-4 space-y-3 sm:space-y-4">
+                    <div
+                        v-for="item in gallery"
+                        :key="item.id"
+                        class="break-inside-avoid group relative rounded-xl overflow-hidden bg-slate-900 border border-slate-800/50 hover:border-blue-500/40 transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/10"
+                        :class="aspectClass[item.format] || 'aspect-video'"
+                        @mouseenter="onGalleryMouseEnter(item)"
+                        @mouseleave="hoveredId = null"
+                    >
+                        <!-- ── Facebook video: embed directly (FB player shows first frame) ── -->
+                        <template v-if="isDirectEmbed(item)">
+                            <iframe
+                                :src="facebookVideoEmbed(item.url)"
+                                class="w-full h-full pointer-events-none"
+                                frameborder="0"
+                                allow="autoplay; clipboard-write; encrypted-media; picture-in-picture"
+                                scrolling="no"
+                            />
+                            <div class="absolute inset-0 z-10 cursor-pointer" @click="onGalleryClick(item)" />
+                        </template>
+
+                        <!-- ── YouTube: thumbnail → muted preview on hover (iframe persists after first load) ── -->
+                        <template v-else-if="item.platform === 'youtube' && item.type === 'video'">
+                            <!-- Thumbnail fades out when iframe is playing -->
+                            <img
+                                v-if="galleryThumb(item)"
+                                :src="galleryThumb(item)"
+                                :alt="item.title || ''"
+                                :class="['absolute inset-0 w-full h-full object-cover transition-opacity duration-500', hoveredId === item.id ? 'opacity-0' : 'opacity-100']"
+                            />
+                            <!--
+                                v-if on first hover (preloadedIds), v-show after → iframe stays in DOM
+                                so the video doesn't reload on subsequent hovers
+                            -->
+                            <iframe
+                                v-if="preloadedIds.has(item.id)"
+                                v-show="hoveredId === item.id"
+                                :src="youtubePreviewEmbed(item.url)"
+                                class="absolute inset-0 w-full h-full pointer-events-none"
+                                frameborder="0"
+                                allow="autoplay; encrypted-media"
+                            />
+                            <div class="absolute inset-0 z-10 cursor-pointer" @click="onGalleryClick(item)" />
+                        </template>
+
+                        <!-- ── Photo or other: static image ── -->
+                        <template v-else>
+                            <img
+                                v-if="galleryThumb(item)"
+                                :src="galleryThumb(item)"
+                                :alt="item.title || ''"
+                                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            />
+                            <div v-else class="w-full h-full flex items-center justify-center">
+                                <svg class="h-12 w-12 text-slate-700" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M3.75 21h16.5a1.5 1.5 0 0 0 1.5-1.5V5.25a1.5 1.5 0 0 0-1.5-1.5H3.75a1.5 1.5 0 0 0-1.5 1.5v14.25a1.5 1.5 0 0 0 1.5 1.5Z" />
+                                </svg>
+                            </div>
+                            <div class="absolute inset-0 z-10 cursor-pointer" @click="onGalleryClick(item)" />
+                        </template>
+
+                        <!-- Play badge — visible at rest, fades when preview starts -->
+                        <div
+                            v-if="item.type === 'video'"
+                            class="absolute inset-0 flex items-center justify-center z-20 pointer-events-none"
+                        >
+                            <div :class="[
+                                'h-12 w-12 rounded-full border border-white/20 flex items-center justify-center transition-all duration-300',
+                                hoveredId === item.id && !isDirectEmbed(item)
+                                    ? 'opacity-0 scale-125'
+                                    : 'bg-black/50 opacity-100 scale-100'
+                            ]">
+                                <svg class="h-5 w-5 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M8 5v14l11-7z"/>
+                                </svg>
+                            </div>
+                        </div>
+
+                        <!-- Bottom info bar -->
+                        <div class="absolute bottom-0 inset-x-0 z-20 pointer-events-none">
+                            <div class="bg-gradient-to-t from-black/80 to-transparent p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+                                <p v-if="item.title" class="text-white text-xs font-medium truncate">{{ item.title }}</p>
+                                <div class="flex items-center gap-1.5 mt-0.5">
+                                    <span v-if="item.platform === 'youtube'" class="text-[10px] font-bold text-red-400">▶ YouTube</span>
+                                    <span v-else-if="item.platform === 'facebook'" class="text-[10px] font-bold text-blue-400">f Facebook</span>
+                                    <span v-else-if="item.platform === 'instagram'" class="text-[10px] font-bold text-pink-400">Instagram</span>
+                                    <span v-if="item.type === 'video'" class="text-[10px] text-white/50 ml-auto">Clic para reproducir →</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -431,6 +619,45 @@ function formatPrice(val) {
                 </div>
             </div>
         </footer>
+
+        <!-- ═══════════════════════════════════════════════════════════ -->
+        <!-- LIGHTBOX — YouTube embed modal                              -->
+        <!-- ═══════════════════════════════════════════════════════════ -->
+        <transition
+            enter-active-class="transition duration-200 ease-out"
+            enter-from-class="opacity-0"
+            enter-to-class="opacity-100"
+            leave-active-class="transition duration-150 ease-in"
+            leave-from-class="opacity-100"
+            leave-to-class="opacity-0"
+        >
+            <div v-if="lightbox" class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90" @click.self="closeLightbox">
+                <div class="relative w-full max-w-4xl">
+                    <button @click="closeLightbox" class="absolute -top-10 right-0 text-white/70 hover:text-white transition-colors">
+                        <svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                    <!-- Portrait (reel) format: narrower modal -->
+                    <div
+                        :class="lightbox.format === 'portrait'
+                            ? 'mx-auto w-full max-w-sm aspect-[9/16]'
+                            : 'aspect-video'"
+                        class="rounded-xl overflow-hidden bg-black shadow-2xl"
+                    >
+                        <iframe
+                            v-if="lightboxEmbedUrl(lightbox)"
+                            :src="lightboxEmbedUrl(lightbox)"
+                            class="w-full h-full"
+                            frameborder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowfullscreen
+                        />
+                    </div>
+                    <p v-if="lightbox.title" class="mt-3 text-center text-white/70 text-sm">{{ lightbox.title }}</p>
+                </div>
+            </div>
+        </transition>
 
         <!-- ═══════════════════════════════════════════════════════════ -->
         <!-- FLOATING WHATSAPP BUTTON                                    -->

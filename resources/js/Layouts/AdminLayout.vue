@@ -59,6 +59,12 @@ const navigation = [
         permission: 'payments.view',
     },
     {
+        name: 'Galería',
+        href: 'admin.gallery.index',
+        icon: 'image',
+        permission: 'gallery.view',
+    },
+    {
         name: 'Ajustes',
         href: 'admin.settings.index',
         icon: 'settings',
