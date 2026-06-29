@@ -197,6 +197,13 @@ const twoFactorActive = props.editUser.two_factor_type && props.editUser.two_fac
                     <p class="mt-1 text-xs text-amber-600">Cambiar el método restablecerá el 2FA actual del usuario.</p>
                 </div>
 
+                <!-- Notice for staff/admin users without 2FA -->
+                <div v-if="!editUser.two_factor_type && !isCliente" class="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3">
+                    <p class="text-xs text-amber-700">
+                        Este usuario no tiene 2FA asignado. Al guardar, se le asignará TOTP automáticamente y deberá configurar su app autenticadora al próximo inicio de sesión.
+                    </p>
+                </div>
+
                 <p class="mt-3 text-xs text-gray-500">
                     Al restablecer el 2FA, el usuario deberá volver a configurarlo al próximo inicio de sesión.
                     Útil cuando un usuario pierde acceso a su autenticador o no recibe el correo.

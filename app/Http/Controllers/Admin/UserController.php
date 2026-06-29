@@ -119,18 +119,24 @@ class UserController extends Controller
             $user->update(['password' => Hash::make($validated['password'])]);
         }
 
-        // Handle 2FA type change for client users
+        // Handle 2FA type changes
         if ($validated['role'] === 'Cliente' && isset($validated['two_factor_type'])) {
             $newType = $validated['two_factor_type'];
             if ($newType !== $user->two_factor_type) {
                 $user->update([
-                    'two_factor_type'         => $newType,
-                    'two_factor_secret'       => null,
-                    'two_factor_confirmed_at' => $newType === 'email' ? now() : null,
-                    'two_factor_email_code'   => null,
+                    'two_factor_type'             => $newType,
+                    'two_factor_secret'           => null,
+                    'two_factor_confirmed_at'     => $newType === 'email' ? now() : null,
+                    'two_factor_email_code'       => null,
                     'two_factor_email_expires_at' => null,
                 ]);
             }
+        } elseif ($validated['role'] !== 'Cliente' && $user->two_factor_type === null) {
+            // Staff/Admin without 2FA get TOTP assigned so they're prompted to set it up on next login
+            $user->update([
+                'two_factor_type'         => 'totp',
+                'two_factor_confirmed_at' => null,
+            ]);
         }
 
         $user->syncRoles([$validated['role']]);
