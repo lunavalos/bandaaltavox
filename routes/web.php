@@ -106,6 +106,7 @@ Route::middleware(['auth', 'active', 'verified', 'two-factor'])->prefix('admin')
         Route::get('/quotations/create', [QuotationController::class, 'create'])->name('quotations.create')->middleware('permission:quotations.create');
         Route::post('/quotations', [QuotationController::class, 'store'])->name('quotations.store')->middleware('permission:quotations.create');
         Route::get('/quotations/{quotation}', [QuotationController::class, 'show'])->name('quotations.show');
+        Route::put('/quotations/{quotation}', [QuotationController::class, 'update'])->name('quotations.update')->middleware('role:Super Admin');
         Route::patch('/quotations/{quotation}/status', [QuotationController::class, 'updateStatus'])->name('quotations.update-status')->middleware('permission:quotations.edit');
         Route::delete('/quotations/{quotation}', [QuotationController::class, 'destroy'])->name('quotations.destroy')->middleware('permission:quotations.delete');
     });
@@ -115,6 +116,7 @@ Route::middleware(['auth', 'active', 'verified', 'two-factor'])->prefix('admin')
         Route::get('/contracts', [ContractController::class, 'index'])->name('contracts.index');
         Route::post('/contracts', [ContractController::class, 'store'])->name('contracts.store')->middleware('permission:contracts.create');
         Route::get('/contracts/{contract}', [ContractController::class, 'show'])->name('contracts.show');
+        Route::put('/contracts/{contract}', [ContractController::class, 'update'])->name('contracts.update')->middleware('role:Super Admin');
         Route::patch('/contracts/{contract}/status', [ContractController::class, 'updateStatus'])->name('contracts.update-status')->middleware('permission:contracts.edit');
     });
 

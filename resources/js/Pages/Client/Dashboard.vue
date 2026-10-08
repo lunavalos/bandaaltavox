@@ -1,4 +1,5 @@
 <script setup>
+import { parseDate } from '@/Composables/useDates';
 import { Head, Link } from '@inertiajs/vue3';
 import ClientLayout from '@/Layouts/ClientLayout.vue';
 
@@ -11,7 +12,7 @@ const props = defineProps({
 });
 
 const formatMoney = (val) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(val ?? 0);
-const formatDate = (d) => d ? new Date(d).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
+const formatDate = (d) => d ? parseDate(d).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
 
 const statusLabels = {
     confirmed: 'Confirmado',
@@ -85,8 +86,8 @@ const statusColors = {
                 <div v-if="upcomingEvents.length" class="divide-y divide-gray-100">
                     <div v-for="event in upcomingEvents" :key="event.id" class="flex items-start gap-4 px-6 py-4">
                         <div class="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-lg bg-amber-50 text-amber-600">
-                            <span class="text-xs font-medium leading-none">{{ new Date(event.event_date).toLocaleDateString('es-MX', { month: 'short' }).toUpperCase() }}</span>
-                            <span class="text-lg font-bold leading-tight">{{ new Date(event.event_date).getDate() }}</span>
+                            <span class="text-xs font-medium leading-none">{{ parseDate(event.event_date).toLocaleDateString('es-MX', { month: 'short' }).toUpperCase() }}</span>
+                            <span class="text-lg font-bold leading-tight">{{ parseDate(event.event_date).getDate() }}</span>
                         </div>
                         <div class="min-w-0 flex-1">
                             <p class="text-sm font-medium text-gray-800 truncate">{{ event.title }}</p>

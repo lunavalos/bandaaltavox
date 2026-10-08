@@ -1,4 +1,5 @@
 <script setup>
+import { parseDate } from '@/Composables/useDates';
 import { Head, Link } from '@inertiajs/vue3';
 import ClientLayout from '@/Layouts/ClientLayout.vue';
 import Pagination from '@/Components/Pagination.vue';
@@ -8,7 +9,7 @@ const props = defineProps({
 });
 
 const formatMoney = (val) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(val ?? 0);
-const formatDate = (d) => d ? new Date(d).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
+const formatDate = (d) => d ? parseDate(d).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
 
 const statusLabels = {
     pending: 'Pendiente',

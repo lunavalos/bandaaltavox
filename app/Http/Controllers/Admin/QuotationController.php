@@ -143,7 +143,35 @@ class QuotationController extends Controller
             'depositPercentage' => $depositPercentage,
             'statuses' => Quotation::STATUSES,
             'defaultClauses' => \App\Models\Contract::DEFAULT_CLAUSES,
+            'eventTypes' => EventType::orderBy('sort_order')->get(['id', 'name']),
         ]);
+    }
+
+    /**
+     * Edit client/event data (Super Admin only). Does not touch items or the contract.
+     */
+    public function update(Request $request, Quotation $quotation)
+    {
+        $validated = $request->validate([
+            'event_type_id' => ['nullable', 'exists:event_types,id'],
+            'event_date' => ['nullable', 'date'],
+            'event_time_start' => ['nullable', 'string'],
+            'event_time_end' => ['nullable', 'string'],
+            'event_venue' => ['nullable', 'string', 'max:500'],
+            'event_city' => ['nullable', 'string', 'max:255'],
+            'event_is_outdoor' => ['boolean'],
+            'guest_count' => ['nullable', 'integer', 'min:1'],
+            'hours_contracted' => ['required', 'integer', 'min:1'],
+            'client_name' => ['required', 'string', 'max:255'],
+            'client_email' => ['nullable', 'email', 'max:255'],
+            'client_phone' => ['nullable', 'string', 'max:50'],
+            'client_address' => ['nullable', 'string', 'max:500'],
+            'observations' => ['nullable', 'string'],
+        ]);
+
+        $quotation->update($validated);
+
+        return back()->with('success', 'Cotización actualizada.');
     }
 
     public function updateStatus(Request $request, Quotation $quotation)

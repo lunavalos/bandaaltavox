@@ -1,6 +1,7 @@
 <script setup>
+import { parseDate, todayISO, toDateInput } from '@/Composables/useDates';
 import { ref, computed } from 'vue';
-import { Head, Link, router, useForm } from '@inertiajs/vue3';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import ConfirmModal from '@/Components/ConfirmModal.vue';
 
@@ -9,7 +10,53 @@ const props = defineProps({
     depositPercentage: Number,
     statuses: Object,
     defaultClauses: Array,
+    eventTypes: Array,
 });
+
+const isSuperAdmin = computed(() => usePage().props.auth.roles.includes('Super Admin'));
+
+const showEditModal = ref(false);
+const editData = () => {
+    const q = props.quotation;
+    return {
+        event_type_id: q.event_type_id ?? '',
+        event_date: toDateInput(q.event_date),
+        event_time_start: q.event_time_start ?? '',
+        event_time_end: q.event_time_end ?? '',
+        event_venue: q.event_venue ?? '',
+        event_city: q.event_city ?? '',
+        event_is_outdoor: !!q.event_is_outdoor,
+        guest_count: q.guest_count ?? '',
+        hours_contracted: q.hours_contracted,
+        client_name: q.client_name,
+        client_email: q.client_email ?? '',
+        client_phone: q.client_phone ?? '',
+        client_address: q.client_address ?? '',
+        observations: q.observations ?? '',
+    };
+};
+
+const editForm = useForm(editData());
+
+const openEditModal = () => {
+    editForm.defaults(editData());
+    editForm.reset();
+    editForm.clearErrors();
+    showEditModal.value = true;
+};
+
+const saveEdit = () => {
+    editForm
+        .transform((data) => ({
+            ...data,
+            event_type_id: data.event_type_id || null,
+            guest_count: data.guest_count || null,
+        }))
+        .put(route('admin.quotations.update', props.quotation.id), {
+            preserveScroll: true,
+            onSuccess: () => { showEditModal.value = false; },
+        });
+};
 
 const showStatusModal = ref(false);
 const showContractModal = ref(false);
@@ -18,7 +65,7 @@ const selectedStatus = ref('');
 const contractForm = useForm({
     quotation_id: props.quotation.id,
     first_payment_amount: Math.round(parseFloat(props.quotation.total) * (props.depositPercentage / 100)),
-    first_payment_date: new Date().toISOString().split('T')[0],
+    first_payment_date: todayISO(),
     clauses: [...props.defaultClauses],
     representative_name: '',
     observations: props.quotation.observations || '',
@@ -53,7 +100,7 @@ const formatPrice = (price) => {
 
 const formatDate = (date) => {
     if (!date) return '—';
-    return new Date(date).toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' });
+    return parseDate(date).toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' });
 };
 
 const statusColors = {
@@ -115,6 +162,15 @@ const canConvert = computed(() => {
                 </div>
 
                 <div class="flex items-center gap-2 flex-wrap">
+                    <!-- Edit (Super Admin) -->
+                    <button
+                        v-if="isSuperAdmin"
+                        @click="openEditModal"
+                        class="rounded-lg border border-amber-200 px-3 py-1.5 text-xs font-medium text-amber-700 hover:bg-amber-50 transition-colors"
+                    >
+                        Editar datos
+                    </button>
+
                     <!-- Status transitions -->
                     <button
                         v-for="statusKey in allowedTransitions"
@@ -390,6 +446,101 @@ const canConvert = computed(() => {
                     class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
                 >
                     {{ contractForm.processing ? 'Generando...' : 'Generar Contrato' }}
+                </button>
+            </template>
+        </ConfirmModal>
+        <!-- Edit Modal (Super Admin) -->
+        <ConfirmModal :show="showEditModal" @close="showEditModal = false" max-width="2xl" title="Editar cotización">
+            <div class="space-y-4 max-h-[65vh] overflow-y-auto pr-2 text-sm">
+                <p v-if="q.contract" class="rounded-lg bg-amber-50 border border-amber-200 p-3 text-xs text-amber-800">
+                    Esta cotización ya tiene el contrato {{ q.contract.contract_number }}. Los cambios aquí no modifican el contrato; edítalo desde la vista del contrato.
+                </p>
+
+                <h4 class="text-xs font-semibold text-gray-500 uppercase">Cliente</h4>
+                <div class="grid gap-3 sm:grid-cols-2">
+                    <div class="sm:col-span-2">
+                        <label class="block font-medium text-gray-700 mb-1">Nombre *</label>
+                        <input v-model="editForm.client_name" type="text" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-amber-400 focus:ring-amber-400 text-sm" />
+                        <p v-if="editForm.errors.client_name" class="mt-1 text-xs text-red-600">{{ editForm.errors.client_name }}</p>
+                    </div>
+                    <div>
+                        <label class="block font-medium text-gray-700 mb-1">Email</label>
+                        <input v-model="editForm.client_email" type="email" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-amber-400 focus:ring-amber-400 text-sm" />
+                        <p v-if="editForm.errors.client_email" class="mt-1 text-xs text-red-600">{{ editForm.errors.client_email }}</p>
+                    </div>
+                    <div>
+                        <label class="block font-medium text-gray-700 mb-1">Teléfono</label>
+                        <input v-model="editForm.client_phone" type="text" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-amber-400 focus:ring-amber-400 text-sm" />
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="block font-medium text-gray-700 mb-1">Dirección</label>
+                        <input v-model="editForm.client_address" type="text" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-amber-400 focus:ring-amber-400 text-sm" />
+                    </div>
+                </div>
+
+                <h4 class="text-xs font-semibold text-gray-500 uppercase pt-2">Evento</h4>
+                <div class="grid gap-3 sm:grid-cols-2">
+                    <div>
+                        <label class="block font-medium text-gray-700 mb-1">Tipo de evento</label>
+                        <select v-model="editForm.event_type_id" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-amber-400 focus:ring-amber-400 text-sm">
+                            <option value="">—</option>
+                            <option v-for="t in eventTypes" :key="t.id" :value="t.id">{{ t.name }}</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-medium text-gray-700 mb-1">Fecha</label>
+                        <input v-model="editForm.event_date" type="date" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-amber-400 focus:ring-amber-400 text-sm" />
+                        <p v-if="editForm.errors.event_date" class="mt-1 text-xs text-red-600">{{ editForm.errors.event_date }}</p>
+                    </div>
+                    <div>
+                        <label class="block font-medium text-gray-700 mb-1">Hora inicio</label>
+                        <input v-model="editForm.event_time_start" type="time" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-amber-400 focus:ring-amber-400 text-sm" />
+                    </div>
+                    <div>
+                        <label class="block font-medium text-gray-700 mb-1">Hora fin</label>
+                        <input v-model="editForm.event_time_end" type="time" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-amber-400 focus:ring-amber-400 text-sm" />
+                    </div>
+                    <div>
+                        <label class="block font-medium text-gray-700 mb-1">Horas contratadas *</label>
+                        <input v-model="editForm.hours_contracted" type="number" min="1" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-amber-400 focus:ring-amber-400 text-sm" />
+                        <p v-if="editForm.errors.hours_contracted" class="mt-1 text-xs text-red-600">{{ editForm.errors.hours_contracted }}</p>
+                    </div>
+                    <div>
+                        <label class="block font-medium text-gray-700 mb-1">Invitados</label>
+                        <input v-model="editForm.guest_count" type="number" min="1" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-amber-400 focus:ring-amber-400 text-sm" />
+                    </div>
+                    <div>
+                        <label class="block font-medium text-gray-700 mb-1">Lugar</label>
+                        <input v-model="editForm.event_venue" type="text" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-amber-400 focus:ring-amber-400 text-sm" />
+                    </div>
+                    <div>
+                        <label class="block font-medium text-gray-700 mb-1">Ciudad</label>
+                        <input v-model="editForm.event_city" type="text" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-amber-400 focus:ring-amber-400 text-sm" />
+                    </div>
+                    <label class="flex items-center gap-2 sm:col-span-2">
+                        <input v-model="editForm.event_is_outdoor" type="checkbox" class="rounded border-gray-300 text-amber-500 focus:ring-amber-400" />
+                        <span class="text-gray-700">Evento al aire libre</span>
+                    </label>
+                </div>
+
+                <div>
+                    <label class="block font-medium text-gray-700 mb-1">Observaciones</label>
+                    <textarea v-model="editForm.observations" rows="3" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-amber-400 focus:ring-amber-400 text-sm" />
+                </div>
+            </div>
+            <template #footer>
+                <button
+                    @click="showEditModal = false"
+                    class="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                    Cancelar
+                </button>
+                <button
+                    @click="saveEdit"
+                    :disabled="editForm.processing"
+                    class="rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-600 disabled:opacity-50"
+                >
+                    {{ editForm.processing ? 'Guardando...' : 'Guardar cambios' }}
                 </button>
             </template>
         </ConfirmModal>

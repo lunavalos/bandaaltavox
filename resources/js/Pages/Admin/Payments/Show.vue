@@ -1,4 +1,5 @@
 <script setup>
+import { parseDate, todayISO } from '@/Composables/useDates';
 import { ref } from 'vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
@@ -26,7 +27,7 @@ const showPaymentForm = ref(false);
 const paymentForm = useForm({
     amount: '',
     method: 'transfer',
-    payment_date: new Date().toISOString().split('T')[0],
+    payment_date: todayISO(),
     reference: '',
     notes: '',
 });
@@ -36,7 +37,7 @@ const submitPayment = () => {
         onSuccess: () => {
             showPaymentForm.value = false;
             paymentForm.reset();
-            paymentForm.payment_date = new Date().toISOString().split('T')[0];
+            paymentForm.payment_date = todayISO();
             paymentForm.method = 'transfer';
         },
     });
@@ -190,7 +191,7 @@ const methodLabels = {
                             <tbody class="divide-y divide-gray-100">
                                 <tr v-for="(pmt, index) in contract.payments" :key="pmt.id" class="hover:bg-gray-50/50">
                                     <td class="px-4 py-3 text-gray-500">{{ index + 1 }}</td>
-                                    <td class="px-4 py-3 text-gray-700">{{ new Date(pmt.payment_date).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' }) }}</td>
+                                    <td class="px-4 py-3 text-gray-700">{{ parseDate(pmt.payment_date).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' }) }}</td>
                                     <td class="px-4 py-3 font-semibold text-emerald-600">{{ formatMoney(pmt.amount) }}</td>
                                     <td class="px-4 py-3">
                                         <span class="inline-flex rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700">
@@ -248,7 +249,7 @@ const methodLabels = {
                         </div>
                         <div v-if="contract.event_date">
                             <span class="text-gray-500">Fecha evento:</span>
-                            <span class="ml-1 font-medium text-gray-700">{{ new Date(contract.event_date).toLocaleDateString('es-MX') }}</span>
+                            <span class="ml-1 font-medium text-gray-700">{{ parseDate(contract.event_date).toLocaleDateString('es-MX') }}</span>
                         </div>
                     </div>
                 </div>

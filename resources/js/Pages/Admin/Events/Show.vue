@@ -1,4 +1,5 @@
 <script setup>
+import { parseDate } from '@/Composables/useDates';
 import { ref } from 'vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
@@ -49,7 +50,7 @@ const changeStatus = (status) => {
 
 const formatDate = (date) => {
     if (!date) return '—';
-    return new Date(date).toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    return parseDate(date).toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 };
 
 const formatMoney = (val) => {
@@ -229,7 +230,7 @@ const formatMoney = (val) => {
                             </thead>
                             <tbody class="divide-y divide-gray-100">
                                 <tr v-for="pmt in event.contract.payments" :key="pmt.id">
-                                    <td class="px-4 py-2.5 text-gray-700">{{ new Date(pmt.payment_date).toLocaleDateString('es-MX') }}</td>
+                                    <td class="px-4 py-2.5 text-gray-700">{{ parseDate(pmt.payment_date).toLocaleDateString('es-MX') }}</td>
                                     <td class="px-4 py-2.5 font-semibold text-gray-800">{{ formatMoney(pmt.amount) }}</td>
                                     <td class="px-4 py-2.5 text-gray-600 capitalize">{{ pmt.method }}</td>
                                     <td class="px-4 py-2.5 text-gray-500">{{ pmt.reference || '—' }}</td>

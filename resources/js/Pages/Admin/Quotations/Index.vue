@@ -1,4 +1,5 @@
 <script setup>
+import { parseDate } from '@/Composables/useDates';
 import { ref, watch } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
@@ -49,7 +50,7 @@ const formatPrice = (price) => {
 
 const formatDate = (date) => {
     if (!date) return '—';
-    return new Date(date).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' });
+    return parseDate(date).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' });
 };
 
 const statusColors = {

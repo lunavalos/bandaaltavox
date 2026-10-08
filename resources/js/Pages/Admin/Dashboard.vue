@@ -1,4 +1,5 @@
 <script setup>
+import { parseDate } from '@/Composables/useDates';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
@@ -20,7 +21,7 @@ function formatCurrency(val) {
 }
 
 function formatDate(d) {
-    return new Date(d).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' });
+    return parseDate(d).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' });
 }
 
 const statusColors = {
@@ -194,8 +195,8 @@ const methodLabels = {
                         class="flex items-center gap-4 px-5 py-3.5 hover:bg-gray-50 transition-colors"
                     >
                         <div class="flex flex-col items-center justify-center w-12 h-12 rounded-lg bg-slate-100 text-center shrink-0">
-                            <span class="text-xs font-medium text-slate-500 uppercase leading-none">{{ new Date(event.event_date).toLocaleDateString('es-MX', { month: 'short' }) }}</span>
-                            <span class="text-lg font-bold text-slate-800 leading-none mt-0.5">{{ new Date(event.event_date).getDate() }}</span>
+                            <span class="text-xs font-medium text-slate-500 uppercase leading-none">{{ parseDate(event.event_date).toLocaleDateString('es-MX', { month: 'short' }) }}</span>
+                            <span class="text-lg font-bold text-slate-800 leading-none mt-0.5">{{ parseDate(event.event_date).getDate() }}</span>
                         </div>
                         <div class="flex-1 min-w-0">
                             <p class="text-sm font-medium text-gray-800 truncate">{{ event.title }}</p>

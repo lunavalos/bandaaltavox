@@ -1,4 +1,5 @@
 <script setup>
+import { parseDate } from '@/Composables/useDates';
 import { Head } from '@inertiajs/vue3';
 import ClientLayout from '@/Layouts/ClientLayout.vue';
 import Pagination from '@/Components/Pagination.vue';
@@ -9,7 +10,7 @@ const props = defineProps({
     statusColors: Object,
 });
 
-const formatDate = (d) => d ? new Date(d).toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' }) : '—';
+const formatDate = (d) => d ? parseDate(d).toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' }) : '—';
 
 const badgeColors = {
     confirmed: 'bg-amber-100 text-amber-700',
@@ -30,10 +31,10 @@ const badgeColors = {
                     <!-- Date block -->
                     <div class="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-xl border border-gray-200 bg-gray-50">
                         <span class="text-[10px] font-semibold uppercase text-gray-500 leading-none">
-                            {{ new Date(event.event_date).toLocaleDateString('es-MX', { month: 'short' }) }}
+                            {{ parseDate(event.event_date).toLocaleDateString('es-MX', { month: 'short' }) }}
                         </span>
                         <span class="text-xl font-bold text-gray-800 leading-tight">
-                            {{ new Date(event.event_date).getDate() }}
+                            {{ parseDate(event.event_date).getDate() }}
                         </span>
                     </div>
 

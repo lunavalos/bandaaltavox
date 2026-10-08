@@ -1,4 +1,5 @@
 <script setup>
+import { parseDate } from '@/Composables/useDates';
 import { ref, computed } from 'vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
@@ -143,7 +144,7 @@ const createEvent = () => {
 
 const formatDate = (date) => {
     if (!date) return '—';
-    return new Date(date).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' });
+    return parseDate(date).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' });
 };
 
 const formatTime = (t) => t || '';

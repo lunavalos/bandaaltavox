@@ -1,4 +1,5 @@
 <script setup>
+import { parseDate } from '@/Composables/useDates';
 import { computed } from 'vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
@@ -163,7 +164,7 @@ const twoFactorActive = props.editUser.two_factor_type && props.editUser.two_fac
                             {{ twoFactorLabel() }}
                         </span>
                         <span v-if="editUser.two_factor_confirmed_at" class="text-xs text-gray-400">
-                            Configurado el {{ new Date(editUser.two_factor_confirmed_at).toLocaleDateString('es-MX') }}
+                            Configurado el {{ parseDate(editUser.two_factor_confirmed_at).toLocaleDateString('es-MX') }}
                         </span>
                     </div>
                     <button

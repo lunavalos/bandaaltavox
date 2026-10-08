@@ -17,7 +17,7 @@ class Event extends Model
     ];
 
     protected $casts = [
-        'event_date' => 'date',
+        'event_date' => 'date:Y-m-d',
         'is_outdoor' => 'boolean',
     ];
 

@@ -158,6 +158,54 @@ class ContractController extends Controller
         ]);
     }
 
+    /**
+     * Edit contract data (Super Admin only). Keeps the agenda event in sync.
+     */
+    public function update(Request $request, Contract $contract)
+    {
+        $validated = $request->validate([
+            'contract_date' => ['required', 'date'],
+            'client_name' => ['required', 'string', 'max:255'],
+            'client_email' => ['nullable', 'email', 'max:255'],
+            'client_phone' => ['nullable', 'string', 'max:50'],
+            'client_address' => ['nullable', 'string', 'max:500'],
+            'event_type_label' => ['nullable', 'string', 'max:255'],
+            'event_date' => ['nullable', 'date'],
+            'event_time_start' => ['nullable', 'string'],
+            'event_time_end' => ['nullable', 'string'],
+            'event_venue' => ['nullable', 'string', 'max:500'],
+            'hours_contracted' => ['required', 'integer', 'min:1'],
+            'event_is_outdoor' => ['boolean'],
+            'total_amount' => ['required', 'numeric', 'min:0'],
+            'first_payment_amount' => ['required', 'numeric', 'min:0'],
+            'first_payment_date' => ['nullable', 'date'],
+            'observations' => ['nullable', 'string'],
+            'representative_name' => ['required', 'string', 'max:255'],
+            'clauses' => ['required', 'array', 'min:1'],
+            'clauses.*' => ['required', 'string'],
+        ]);
+
+        $contract->update($validated);
+
+        if ($event = $contract->event) {
+            $eventTypeLabel = $validated['event_type_label'] ?: 'Evento';
+            $event->update(array_filter([
+                'title' => "{$eventTypeLabel} - {$validated['client_name']}",
+                'event_type_label' => $eventTypeLabel,
+                'event_date' => $validated['event_date'] ?? null,
+                'time_start' => $validated['event_time_start'] ?? null,
+                'time_end' => $validated['event_time_end'] ?? null,
+                'venue' => $validated['event_venue'] ?? null,
+                'hours_contracted' => $validated['hours_contracted'],
+                'is_outdoor' => $validated['event_is_outdoor'] ?? false,
+                'client_name' => $validated['client_name'],
+                'client_phone' => $validated['client_phone'] ?? null,
+            ], fn ($v, $k) => $k !== 'event_date' || $v !== null, ARRAY_FILTER_USE_BOTH));
+        }
+
+        return back()->with('success', 'Contrato actualizado.');
+    }
+
     public function updateStatus(Request $request, Contract $contract)
     {
         $validated = $request->validate([

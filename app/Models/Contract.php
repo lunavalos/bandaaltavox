@@ -21,9 +21,9 @@ class Contract extends Model
     ];
 
     protected $casts = [
-        'contract_date' => 'date',
-        'event_date' => 'date',
-        'first_payment_date' => 'date',
+        'contract_date' => 'date:Y-m-d',
+        'event_date' => 'date:Y-m-d',
+        'first_payment_date' => 'date:Y-m-d',
         'signed_at' => 'datetime',
         'event_is_outdoor' => 'boolean',
         'total_amount' => 'decimal:2',

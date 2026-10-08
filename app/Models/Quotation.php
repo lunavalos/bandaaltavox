@@ -19,8 +19,8 @@ class Quotation extends Model
     ];
 
     protected $casts = [
-        'event_date' => 'date',
-        'expires_at' => 'date',
+        'event_date' => 'date:Y-m-d',
+        'expires_at' => 'date:Y-m-d',
         'converted_at' => 'datetime',
         'event_is_outdoor' => 'boolean',
         'subtotal' => 'decimal:2',
