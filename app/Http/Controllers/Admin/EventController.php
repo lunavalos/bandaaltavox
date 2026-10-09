@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Event;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -11,12 +12,18 @@ class EventController extends Controller
 {
     public function index(Request $request)
     {
-        $month = $request->input('month', now()->month);
-        $year = $request->input('year', now()->year);
+        $month = (int) $request->input('month', now()->month);
+        $year = (int) $request->input('year', now()->year);
+
+        if ($month < 1 || $month > 12 || $year < 1900 || $year > 2100) {
+            $month = now()->month;
+            $year = now()->year;
+        }
 
         // Events for the calendar (full month + buffer days)
-        $startDate = now()->setYear($year)->setMonth($month)->startOfMonth()->subDays(7);
-        $endDate = now()->setYear($year)->setMonth($month)->endOfMonth()->addDays(7);
+        $monthStart = Carbon::create($year, $month, 1);
+        $startDate = $monthStart->copy()->startOfMonth()->subDays(7);
+        $endDate = $monthStart->copy()->endOfMonth()->addDays(7);
 
         $events = Event::with(['contract'])
             ->whereBetween('event_date', [$startDate, $endDate])
@@ -47,8 +54,8 @@ class EventController extends Controller
         return Inertia::render('Admin/Events/Index', [
             'events' => $events,
             'upcoming' => $upcoming,
-            'month' => (int) $month,
-            'year' => (int) $year,
+            'month' => $month,
+            'year' => $year,
             'statuses' => Event::STATUSES,
             'statusColors' => Event::STATUS_COLORS,
         ]);
