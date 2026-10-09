@@ -18,8 +18,8 @@ const props = defineProps({
 });
 
 // Calendar navigation
-const currentMonth = ref(props.month);
-const currentYear = ref(props.year);
+const currentMonth = computed(() => props.month);
+const currentYear = computed(() => props.year);
 
 const monthNames = [
     'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
