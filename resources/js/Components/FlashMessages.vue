@@ -28,7 +28,7 @@ watch(
 </script>
 
 <template>
-    <div class="fixed top-4 right-4 z-[100] space-y-2 pointer-events-none">
+    <div class="fixed top-4 right-4 z-[100] space-y-2 pointer-events-none print:hidden">
         <TransitionGroup
             enter-active-class="transition ease-out duration-300"
             enter-from-class="transform translate-x-full opacity-0"

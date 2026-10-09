@@ -144,6 +144,13 @@ class QuotationController extends Controller
             'statuses' => Quotation::STATUSES,
             'defaultClauses' => \App\Models\Contract::DEFAULT_CLAUSES,
             'eventTypes' => EventType::orderBy('sort_order')->get(['id', 'name']),
+            'business' => [
+                'name' => Setting::get('business_name', 'Banda Alta Vox'),
+                'phone' => Setting::get('business_phone'),
+                'email' => Setting::get('business_email'),
+                'address' => Setting::get('business_address'),
+                'whatsapp' => Setting::get('whatsapp_number'),
+            ],
         ]);
     }
 
