@@ -107,13 +107,13 @@ const itemTypeLabels = {
                                 <td class="px-6 py-3 text-gray-800">{{ item.description }}</td>
                                 <td class="px-6 py-3 text-center">
                                     <span class="rounded-full px-2 py-0.5 text-[10px] font-medium"
-                                        :class="item.type === 'package' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'">
-                                        {{ itemTypeLabels[item.type] }}
+                                        :class="item.type === 'package' ? 'bg-amber-100 text-amber-700' : item.is_included ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'">
+                                        {{ item.is_included ? 'Incluido' : itemTypeLabels[item.type] }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-3 text-center text-gray-600">{{ item.quantity }}</td>
-                                <td class="px-6 py-3 text-right text-gray-600">{{ formatMoney(item.unit_price) }}</td>
-                                <td class="px-6 py-3 text-right font-medium text-gray-800">{{ formatMoney(item.total) }}</td>
+                                <td class="px-6 py-3 text-right text-gray-600">{{ item.is_included ? 'Incluido' : formatMoney(item.unit_price) }}</td>
+                                <td class="px-6 py-3 text-right font-medium text-gray-800">{{ item.is_included ? 'Incluido' : formatMoney(item.total) }}</td>
                             </tr>
                         </tbody>
                     </table>

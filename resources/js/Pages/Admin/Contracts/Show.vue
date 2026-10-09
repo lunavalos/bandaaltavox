@@ -244,7 +244,7 @@ const saveEdit = () => {
                                 <tr v-for="item in c.quotation.items" :key="item.id">
                                     <td class="px-4 py-2">{{ item.description }}</td>
                                     <td class="px-4 py-2 text-center">{{ item.quantity }}</td>
-                                    <td class="px-4 py-2 text-right font-medium">{{ formatPrice(item.total) }}</td>
+                                    <td class="px-4 py-2 text-right font-medium">{{ item.is_included ? 'Incluido' : formatPrice(item.total) }}</td>
                                 </tr>
                             </tbody>
                         </table>

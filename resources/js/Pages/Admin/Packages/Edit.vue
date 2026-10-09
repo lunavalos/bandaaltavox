@@ -1,6 +1,6 @@
 <script setup>
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
@@ -10,6 +10,8 @@ const props = defineProps({
     editPackage: Object,
     eventTypes: Array,
     addonSubcategories: Object,
+    addons: Array,
+    addonCategories: Object,
 });
 
 const form = useForm({
@@ -25,6 +27,10 @@ const form = useForm({
     includes: props.editPackage.includes?.map(inc => ({
         description: inc.description,
         is_highlighted: inc.is_highlighted,
+    })) || [],
+    included_addons: props.editPackage.included_addons?.map(a => ({
+        id: a.id,
+        quantity: a.pivot?.quantity ?? 1,
     })) || [],
 });
 
@@ -42,6 +48,30 @@ const moveInclude = (index, direction) => {
     const temp = form.includes[index];
     form.includes[index] = form.includes[newIndex];
     form.includes[newIndex] = temp;
+};
+
+// Included addons (sin costo)
+const groupedAddons = computed(() => {
+    const groups = {};
+    props.addons.forEach(addon => {
+        const cat = addon.category;
+        const sub = addon.subcategory || '';
+        if (!groups[cat]) groups[cat] = {};
+        if (!groups[cat][sub]) groups[cat][sub] = [];
+        groups[cat][sub].push(addon);
+    });
+    return groups;
+});
+
+const isAddonIncluded = (id) => form.included_addons.some(a => a.id === id);
+
+const toggleIncludedAddon = (id) => {
+    const idx = form.included_addons.findIndex(a => a.id === id);
+    if (idx === -1) {
+        form.included_addons.push({ id, quantity: 1 });
+    } else {
+        form.included_addons.splice(idx, 1);
+    }
 };
 
 const submit = () => {
@@ -279,6 +309,48 @@ const deleteImage = () => {
                     </div>
 
                     <InputError class="mt-2" :message="form.errors.includes" />
+                </div>
+
+                <!-- Included addons (sin costo) -->
+                <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+                    <h3 class="text-base font-semibold text-gray-800">Adicionales incluidos sin costo</h3>
+                    <p class="text-sm text-gray-500 mt-0.5 mb-4">Se agregan automáticamente a la cotización como "Incluido" y no suman al precio del paquete.</p>
+
+                    <div class="space-y-4">
+                        <div v-for="(subcategoryMap, category) in groupedAddons" :key="category">
+                            <p class="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">{{ addonCategories[category] || category }}</p>
+                            <div v-for="(addonsInGroup, subcategory) in subcategoryMap" :key="subcategory" class="mb-2">
+                                <p v-if="subcategory" class="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-1">{{ subcategory }}</p>
+                                <div class="flex flex-wrap gap-2">
+                                    <div
+                                        v-for="addon in addonsInGroup"
+                                        :key="addon.id"
+                                        :class="[
+                                            'flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-all',
+                                            isAddonIncluded(addon.id)
+                                                ? 'border-emerald-400 bg-emerald-50 text-emerald-800'
+                                                : 'border-gray-200 text-gray-600 hover:bg-gray-50',
+                                        ]"
+                                    >
+                                        <label class="flex items-center gap-2 cursor-pointer">
+                                            <input type="checkbox" :checked="isAddonIncluded(addon.id)" @change="toggleIncludedAddon(addon.id)" class="h-4 w-4 rounded border-gray-300 text-emerald-500 focus:ring-emerald-400" />
+                                            <span>{{ addon.name }}</span>
+                                        </label>
+                                        <input
+                                            v-if="isAddonIncluded(addon.id)"
+                                            v-model.number="form.included_addons.find(a => a.id === addon.id).quantity"
+                                            type="number"
+                                            min="1"
+                                            title="Cantidad"
+                                            class="w-14 rounded-md border-gray-300 py-0.5 px-1.5 text-xs focus:border-emerald-400 focus:ring-emerald-400"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <p v-if="!addons.length" class="text-sm text-gray-400">No hay adicionales activos.</p>
+                    </div>
+                    <InputError class="mt-2" :message="form.errors.included_addons" />
                 </div>
 
                 <!-- Actions -->

@@ -339,17 +339,18 @@ const canConvert = computed(() => {
                                     :class="[
                                         'inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium',
                                         item.type === 'package' ? 'bg-amber-100 text-amber-700' :
+                                        item.type === 'addon' && item.is_included ? 'bg-emerald-100 text-emerald-700' :
                                         item.type === 'addon' ? 'bg-blue-100 text-blue-700' :
                                         'bg-gray-100 text-gray-700',
                                     ]"
                                 >
-                                    {{ item.type === 'package' ? 'Paquete' : item.type === 'addon' ? 'Extra' : 'Custom' }}
+                                    {{ item.type === 'package' ? 'Paquete' : item.type === 'addon' ? (item.is_included ? 'Incluido' : 'Extra') : 'Custom' }}
                                 </span>
                             </td>
                             <td class="px-6 py-3 font-medium text-gray-800">{{ item.description }}</td>
                             <td class="px-6 py-3 text-center text-gray-600">{{ item.quantity }}</td>
-                            <td class="px-6 py-3 text-right text-gray-600">{{ formatPrice(item.unit_price) }}</td>
-                            <td class="px-6 py-3 text-right font-bold text-gray-800">{{ formatPrice(item.total) }}</td>
+                            <td class="px-6 py-3 text-right text-gray-600">{{ item.is_included ? 'Incluido' : formatPrice(item.unit_price) }}</td>
+                            <td class="px-6 py-3 text-right font-bold text-gray-800">{{ item.is_included ? 'Incluido' : formatPrice(item.total) }}</td>
                         </tr>
                     </tbody>
                 </table>

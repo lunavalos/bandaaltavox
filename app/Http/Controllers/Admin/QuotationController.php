@@ -39,7 +39,7 @@ class QuotationController extends Controller
     {
         return Inertia::render('Admin/Quotations/Wizard', [
             'eventTypes' => EventType::where('is_active', true)->orderBy('sort_order')->get(),
-            'packages' => Package::with('includes')
+            'packages' => Package::with(['includes', 'includedAddons'])
                 ->where('is_active', true)
                 ->orderBy('sort_order')
                 ->get(),
@@ -81,6 +81,7 @@ class QuotationController extends Controller
             'items.*.description' => ['required', 'string', 'max:500'],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
             'items.*.unit_price' => ['required', 'numeric', 'min:0'],
+            'items.*.is_included' => ['boolean'],
             // Meta
             'observations' => ['nullable', 'string'],
             'discount' => ['nullable', 'numeric', 'min:0'],
@@ -114,14 +115,18 @@ class QuotationController extends Controller
 
         // Create items
         foreach ($validated['items'] as $index => $item) {
-            $total = $item['quantity'] * $item['unit_price'];
+            // Los adicionales incluidos en el paquete no suman al total
+            $isIncluded = $item['is_included'] ?? false;
+            $unitPrice = $isIncluded ? 0 : $item['unit_price'];
+            $total = $item['quantity'] * $unitPrice;
             $quotation->items()->create([
                 'type' => $item['type'],
                 'reference_id' => $item['reference_id'] ?? null,
                 'description' => $item['description'],
                 'quantity' => $item['quantity'],
-                'unit_price' => $item['unit_price'],
+                'unit_price' => $unitPrice,
                 'total' => $total,
+                'is_included' => $isIncluded,
                 'sort_order' => $index,
             ]);
         }

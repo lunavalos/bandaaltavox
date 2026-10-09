@@ -105,7 +105,7 @@ const methodLabels = {
                             <div class="space-y-2">
                                 <div v-for="item in contract.quotation.items" :key="item.id" class="flex items-center justify-between py-1.5 text-sm">
                                     <span class="text-gray-700">{{ item.description }} <span v-if="item.quantity > 1" class="text-gray-400">×{{ item.quantity }}</span></span>
-                                    <span class="font-medium text-gray-800">{{ formatMoney(item.total) }}</span>
+                                    <span class="font-medium text-gray-800">{{ item.is_included ? 'Incluido' : formatMoney(item.total) }}</span>
                                 </div>
                             </div>
                         </div>

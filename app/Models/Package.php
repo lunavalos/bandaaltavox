@@ -36,6 +36,16 @@ class Package extends Model
         return $this->hasMany(PackageInclude::class)->orderBy('sort_order');
     }
 
+    /**
+     * Adicionales que el paquete ya incluye sin costo.
+     */
+    public function includedAddons(): BelongsToMany
+    {
+        return $this->belongsToMany(ServiceAddon::class, 'package_included_addons')
+            ->withPivot('quantity')
+            ->withTimestamps();
+    }
+
     public function eventTypes(): BelongsToMany
     {
         return $this->belongsToMany(EventType::class);

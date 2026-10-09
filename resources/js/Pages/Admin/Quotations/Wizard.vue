@@ -49,6 +49,10 @@ const selectedPackage = computed(() =>
     props.packages.find(p => p.id === selectedPackageId.value)
 );
 
+// Adicionales que el paquete ya incluye sin costo
+const includedAddons = computed(() => selectedPackage.value?.included_addons ?? []);
+const includedAddonIds = computed(() => includedAddons.value.map(a => a.id));
+
 // --- Addon selection ---
 const selectedAddonIds = ref([]);
 const addonQuantities = ref({});
@@ -95,6 +99,17 @@ const buildItems = () => {
             quantity: 1,
             unit_price: selectedPackage.value.price != null ? parseFloat(selectedPackage.value.price) : 0,
             price_pending: selectedPackage.value.price == null,
+        });
+        // Included addons (sin costo)
+        includedAddons.value.forEach(addon => {
+            items.push({
+                type: 'addon',
+                reference_id: addon.id,
+                description: addon.name,
+                quantity: addon.pivot?.quantity ?? 1,
+                unit_price: 0,
+                is_included: true,
+            });
         });
     }
     // Addons
@@ -149,7 +164,7 @@ const requiredAddonSatisfied = computed(() => {
     if (!requiredSubcategory.value) return true;
     return props.addons.some(a =>
         a.subcategory === requiredSubcategory.value &&
-        selectedAddonIds.value.includes(a.id)
+        (selectedAddonIds.value.includes(a.id) || includedAddonIds.value.includes(a.id))
     );
 });
 
@@ -367,6 +382,15 @@ const formatPrice = (price) => {
                                     </svg>
                                     Requiere elegir: {{ pkg.required_addon_subcategory }}
                                 </div>
+                                <div v-if="pkg.included_addons?.length" class="mt-2 flex flex-wrap gap-1">
+                                    <span
+                                        v-for="addon in pkg.included_addons"
+                                        :key="addon.id"
+                                        class="inline-flex items-center rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-[11px] font-medium text-emerald-700"
+                                    >
+                                        Incluye: {{ addon.name }}<template v-if="(addon.pivot?.quantity ?? 1) > 1"> ×{{ addon.pivot.quantity }}</template>
+                                    </span>
+                                </div>
                                 <div v-if="pkg.includes?.length" class="mt-3 space-y-1.5">
                                     <div
                                         v-for="inc in pkg.includes"
@@ -491,6 +515,12 @@ const formatPrice = (price) => {
                                                     class="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700"
                                                 >
                                                     Sugerido
+                                                </span>
+                                                <span
+                                                    v-if="includedAddonIds.includes(addon.id)"
+                                                    class="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700"
+                                                >
+                                                    Incluido en paquete
                                                 </span>
                                             </div>
                                             <p v-if="addon.description" class="text-xs text-gray-500 mt-0.5">{{ addon.description }}</p>
@@ -642,11 +672,13 @@ const formatPrice = (price) => {
                                     <td class="px-6 py-3 text-gray-800">{{ item.description }}</td>
                                     <td class="px-6 py-3 text-center text-gray-600">{{ item.quantity }}</td>
                                     <td class="px-6 py-3 text-right text-gray-600">
-                                        <span v-if="item.price_pending" class="text-xs italic text-gray-400">A cotizar</span>
+                                        <span v-if="item.is_included" class="text-xs font-medium text-emerald-600">Incluido</span>
+                                        <span v-else-if="item.price_pending" class="text-xs italic text-gray-400">A cotizar</span>
                                         <span v-else>{{ formatPrice(item.unit_price) }}</span>
                                     </td>
                                     <td class="px-6 py-3 text-right font-medium text-gray-800">
-                                        <span v-if="item.price_pending" class="text-xs italic text-gray-400">A cotizar</span>
+                                        <span v-if="item.is_included" class="text-xs font-medium text-emerald-600">Incluido</span>
+                                        <span v-else-if="item.price_pending" class="text-xs italic text-gray-400">A cotizar</span>
                                         <span v-else>{{ formatPrice(item.quantity * item.unit_price) }}</span>
                                     </td>
                                 </tr>

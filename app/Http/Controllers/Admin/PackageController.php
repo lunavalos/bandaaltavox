@@ -36,6 +36,9 @@ class PackageController extends Controller
         return Inertia::render('Admin/Packages/Create', [
             'eventTypes'       => EventType::where('is_active', true)->orderBy('sort_order')->get(),
             'addonSubcategories' => \App\Models\ServiceAddon::SUBCATEGORIES,
+            'addons'           => \App\Models\ServiceAddon::where('is_active', true)
+                ->orderBy('category')->orderBy('sort_order')->get(['id', 'name', 'category', 'subcategory']),
+            'addonCategories'  => \App\Models\ServiceAddon::CATEGORIES,
         ]);
     }
 
@@ -55,6 +58,9 @@ class PackageController extends Controller
             'includes' => ['array'],
             'includes.*.description' => ['required', 'string', 'max:500'],
             'includes.*.is_highlighted' => ['boolean'],
+            'included_addons' => ['array'],
+            'included_addons.*.id' => ['required', 'exists:service_addons,id'],
+            'included_addons.*.quantity' => ['required', 'integer', 'min:1'],
         ]);
 
         $package = Package::create([
@@ -81,17 +87,27 @@ class PackageController extends Controller
         // Sync event types
         $package->eventTypes()->sync($validated['event_types'] ?? []);
 
+        // Sync included addons (sin costo)
+        $package->includedAddons()->sync(
+            collect($validated['included_addons'] ?? [])
+                ->mapWithKeys(fn ($a) => [$a['id'] => ['quantity' => $a['quantity']]])
+                ->all()
+        );
+
         return redirect()->route('admin.packages.index')->with('success', 'Paquete creado correctamente.');
     }
 
     public function edit(Package $package)
     {
-        $package->load(['includes', 'eventTypes']);
+        $package->load(['includes', 'eventTypes', 'includedAddons']);
 
         return Inertia::render('Admin/Packages/Edit', [
             'editPackage'      => $package,
             'eventTypes'       => EventType::where('is_active', true)->orderBy('sort_order')->get(),
             'addonSubcategories' => \App\Models\ServiceAddon::SUBCATEGORIES,
+            'addons'           => \App\Models\ServiceAddon::where('is_active', true)
+                ->orderBy('category')->orderBy('sort_order')->get(['id', 'name', 'category', 'subcategory']),
+            'addonCategories'  => \App\Models\ServiceAddon::CATEGORIES,
         ]);
     }
 
@@ -111,6 +127,9 @@ class PackageController extends Controller
             'includes' => ['array'],
             'includes.*.description' => ['required', 'string', 'max:500'],
             'includes.*.is_highlighted' => ['boolean'],
+            'included_addons' => ['array'],
+            'included_addons.*.id' => ['required', 'exists:service_addons,id'],
+            'included_addons.*.quantity' => ['required', 'integer', 'min:1'],
         ]);
 
         $package->update([
@@ -137,6 +156,13 @@ class PackageController extends Controller
 
         // Sync event types
         $package->eventTypes()->sync($validated['event_types'] ?? []);
+
+        // Sync included addons (sin costo)
+        $package->includedAddons()->sync(
+            collect($validated['included_addons'] ?? [])
+                ->mapWithKeys(fn ($a) => [$a['id'] => ['quantity' => $a['quantity']]])
+                ->all()
+        );
 
         return redirect()->route('admin.packages.index')->with('success', 'Paquete actualizado correctamente.');
     }
